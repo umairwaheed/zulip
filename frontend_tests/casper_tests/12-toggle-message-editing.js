@@ -43,13 +43,15 @@ casper.then(function () {
 });
 
 var edited_value = 'admin tests: test edit';
+var msg_id;
 
 casper.then(function () {
     casper.waitUntilVisible(".message_edit_content", function () {
-        casper.evaluate(function (edited_value) {
+        msg_id = casper.evaluate(function (edited_value) {
             var msg = $('#zhome .message_row:last');
             msg.find('.message_edit_content').val(edited_value);
             msg.find('.message_edit_save').click();
+            return msg.attr('zid');
         }, edited_value);
     });
 });
@@ -58,6 +60,10 @@ casper.then(function () {
     // check that the message was indeed edited
     casper.waitWhileVisible("textarea.message_edit_content", function () {
         casper.test.assertSelectorHasText(".last_message .message_content", edited_value);
+        casper.test.info(casper.evaluate(function (id) {
+            var message = current_msg_list.get(id);
+            return message_edit.get_editability(message);
+        }, msg_id));
     });
 });
 
@@ -135,16 +141,31 @@ casper.then(function () {
 // Check that edit link has changed to "View source" in the popover menu
 // TODO: also check that the edit icon no longer appears next to the message
 casper.then(function () {
-    casper.waitUntilVisible('.message_row');
+    casper.waitFor(function () {
+        return casper.evaluate(function (msg_id) {
+            var msg = $('#zhome .message_row:last');
+            return msg.attr('zid') === msg_id;
+        }, msg_id);
+    });
+});
+
+casper.then(function () {
     // Note that this could have a false positive, e.g. if all the messages aren't
     // loaded yet. See Issue #1243
     casper.evaluate(function () {
         var msg = $('#zhome .message_row:last');
         msg.find('.info').click();
     });
+    casper.test.info(casper.evaluate(function (id) {
+        var message = current_msg_list.get(id);
+        return message_edit.get_editability(message);
+    }, msg_id));
     casper.waitUntilVisible('.popover_edit_message', function () {
         casper.test.assertSelectorHasText('.popover_edit_message', 'View source');
     });
+});
+
+casper.then(function () {
     casper.evaluate(function () {
         var msg = $('#zhome .message_row:last');
         msg.find('.info').click();
