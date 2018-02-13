@@ -19,6 +19,29 @@ if Vagrant::VERSION == "1.8.7" then
     end
 end
 
+if ARGV[0] != 'box'
+  LXC_VERSION = `lxc-ls --version`.strip unless defined? LXC_VERSION
+  if LXC_VERSION >= "2.1.0"
+    lxc_config_file = ENV['HOME'] + "/.vagrant.d/boxes/fgrehm-VAGRANTSLASH-trusty64-lxc/1.2.0/lxc/lxc-config"
+    if File.file?(lxc_config_file)
+      lines = File.readlines(lxc_config_file)
+      deprecated_line = "lxc.pivotdir = lxc_putold\n"
+      if lines[1] == deprecated_line
+        lines[1] = "# #{deprecated_line}"
+        File.open(lxc_config_file, 'w') do |f|
+          f.puts(lines)
+        end
+      end
+    else
+      puts 'You are running lxc>=2.1.0, and fgrehm/trusty64-lxc box is incompatible '\
+           "with it by default. First add the box by doing:\n"\
+           "vagrant box add  https://vagrantcloud.com/fgrehm/trusty64-lxc\n"\
+           'Once this command succeeds, do "vagrant up" again.'
+      exit
+    end
+  end
+end
+
 # Workaround: Vagrant removed the atlas.hashicorp.com to
 # vagrantcloud.com redirect in February 2018. The value of
 # DEFAULT_SERVER_URL in Vagrant versions less than 1.9.3 is
