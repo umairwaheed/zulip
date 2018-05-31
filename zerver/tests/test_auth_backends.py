@@ -593,6 +593,12 @@ class GitHubAuthBackendTest(ZulipTestCase):
         user_profile = get_user(email, realm)
         self.assertEqual(get_session_dict_user(self.client.session), user_profile.id)
 
+    @override_settings(SOCIAL_AUTH_GITHUB_TEAM_ID='fake')
+    def test_team(self):
+        import pdb;pdb.set_trace()
+        from zproject import backends
+        self.assertTrue(issubclass(backends.GitHubAuthBackend, GithubTeamOAuth2))
+
 class GoogleOAuthTest(ZulipTestCase):
     def google_oauth2_test(self, token_response: ResponseMock, account_response: ResponseMock,
                            *, subdomain: Optional[str]=None,
