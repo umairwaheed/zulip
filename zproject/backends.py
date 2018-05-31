@@ -336,29 +336,7 @@ class DevAuthBackend(ZulipAuthMixin):
             return None
         return common_get_active_user(dev_auth_username, realm, return_data=return_data)
 
-class GitHubMetaClass(type):
-    """
-    We need to create this because there are three GitHub backends in
-    Python social auth, and we only want one backend. This metaclass
-    just assigns the correct base class to the GitHubAuthBackend. This
-    is done at the compile/import time, not at the run time.
-    """
-    def __new__(cls, name: str,
-                bases: Tuple[Any, ...],
-                namespace: Dict[Any, Any],
-                **kwargs: Dict[Any, Any]
-                ) -> type:
-        team_id = settings.SOCIAL_AUTH_GITHUB_TEAM_ID
-        org_name = settings.SOCIAL_AUTH_GITHUB_ORG_NAME
-
-        if team_id:
-            bases = (GithubTeamOAuth2,)
-        elif org_name:
-            bases = (GithubOrganizationOAuth2,)
-
-        return type.__new__(cls, name, bases, dict(namespace))
-
-class GitHubAuthBackend(GithubOAuth2, metaclass=GitHubMetaClass):
+class GitHubAuthBackend(GithubOAuth2):
     auth_backend_name = "GitHub"
 
 AUTH_BACKEND_NAME_MAP = {
